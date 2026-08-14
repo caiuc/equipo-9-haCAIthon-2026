@@ -3,7 +3,9 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, render_template_string, redirect, request, session, url_for, render_template
+from flask import Flask, render_template_string, redirect, request, session, url_for, render_template, jsonify
+
+from backend.queries import generar_url_lectura
 
 if __package__ in (None, ""):
     project_root = Path(__file__).resolve().parent.parent
@@ -51,10 +53,36 @@ def portal():
 
 @app.route("/historial", methods=["GET"])
 def historial():
-    if "user_id" not in session or session.get("rol") != "medico": return redirect(url_for("login"))
-    rut_paciente = request.args.get("rut_paciente")
-    documentos = get_patient_documents_by_rut(rut_paciente)
-    return render_template("portal.html", usuario={"rol": "medico", "rut": rut_paciente}, documentos=documentos)
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    # Captura el RUT que viaja por la URL (ej: /historial?rut_paciente=123...)
+    rut_paciente = request.args.get("rut_paciente", "").strip()
+    
+    if not rut_paciente:
+        return "Debes indicar un RUT de paciente.", 400
+
+    if session.get("rol") != "medico":
+        return "Solo un médico puede consultar historiales ajenos.", 403
+
+    try:
+        paciente = get_user_by_rut(rut_paciente)
+    except Exception as exc:
+        app.logger.error("Error consultando paciente en /historial: %s", exc, exc_info=True)
+        return "Error interno al consultar historial.", 500
+
+    if paciente is None:
+        return "Paciente no encontrado.", 404
+
+    try:
+        documentos = get_patient_documents_by_rut(rut_paciente)
+        register_access_log(rut_paciente, session.get("rut"))
+    except Exception as exc:
+        app.logger.error("Error obteniendo documentos en /historial: %s", exc, exc_info=True)
+        return "Error interno al consultar historial.", 500
+
+    # Renderiza la vista pasando los datos del paciente y sus documentos
+    return render_template("portal.html", usuario={"rol": "medico", "rut": rut_paciente, "nombre_completo": paciente.get("nombre_completo", "Paciente")}, documentos=documentos)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -129,22 +157,15 @@ def subir_examen():
             content_type=archivo.mimetype,
         )
     except Exception as exc:
-        app.logger.error(
-            "Error interno en /subir_examen para rut_paciente=%s: %s",
-            rut_paciente,
-            exc,
-            exc_info=True,
-        )
+        app.logger.error("Error en /subir_examen: %s", exc, exc_info=True)
         return "Error interno al subir examen.", 500
 
     if created is None:
-        return "No se pudo registrar el examen.", 500
+        return "No se pudo registrar el examen en la base de datos o storage.", 500
 
     return redirect(url_for("historial", rut_paciente=rut_paciente))
 
-# app.py
-from flask import redirect, jsonify
-from backend.queries import generar_url_lectura
+
 
 @app.route('/ver_documento/<path:nombre_archivo>', methods=['GET'])
 def ver_documento(nombre_archivo):
