@@ -1,16 +1,31 @@
 import os
+import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from flask import Flask, render_template_string, redirect, request, session, url_for
 
-from app.backend.queries import (
-    authenticate_user,
-    create_document_for_patient,
-    create_user_with_profile,
-    get_patient_documents_by_rut,
-    get_user_by_rut,
-    register_access_log,
-)
+if __package__ in (None, ""):
+    project_root = Path(__file__).resolve().parent.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+    from app.backend.queries import (
+        authenticate_user,
+        create_document_for_patient,
+        create_user_with_profile,
+        get_patient_documents_by_rut,
+        get_user_by_rut,
+        register_access_log,
+    )
+else:
+    from app.backend.queries import (
+        authenticate_user,
+        create_document_for_patient,
+        create_user_with_profile,
+        get_patient_documents_by_rut,
+        get_user_by_rut,
+        register_access_log,
+    )
 
 load_dotenv()
 
@@ -73,12 +88,21 @@ def historial():
     if session.get("rol") != "medico":
         return "Solo un médico puede consultar historiales ajenos.", 403
 
-    paciente = get_user_by_rut(rut_paciente)
+    try:
+        paciente = get_user_by_rut(rut_paciente)
+    except Exception as exc:
+        app.logger.error("Error consultando paciente en /historial: %s", exc, exc_info=True)
+        return "Error interno al consultar historial.", 500
+
     if paciente is None:
         return "Paciente no encontrado.", 404
 
-    documentos = get_patient_documents_by_rut(rut_paciente)
-    register_access_log(rut_paciente, session.get("rut"))
+    try:
+        documentos = get_patient_documents_by_rut(rut_paciente)
+        register_access_log(rut_paciente, session.get("rut"))
+    except Exception as exc:
+        app.logger.error("Error obteniendo documentos en /historial: %s", exc, exc_info=True)
+        return "Error interno al consultar historial.", 500
 
     html = """
     <html>
@@ -93,6 +117,11 @@ def historial():
                             - Validado
                         {% else %}
                             - Pendiente
+                        {% endif %}
+                        | Bucket: {{ documento.bucket_name }}
+                        | Path: {{ documento.storage_path }}
+                        {% if documento.public_url %}
+                            | URL: {{ documento.public_url }}
                         {% endif %}
                     </li>
                 {% endfor %}
@@ -110,7 +139,12 @@ def login():
         rut = request.form.get("rut", "").strip()
         password = request.form.get("password", "")
 
-        user = authenticate_user(rut, password)
+        try:
+            user = authenticate_user(rut, password)
+        except Exception as exc:
+            app.logger.error("Error en autenticacion para rut=%s: %s", rut, exc, exc_info=True)
+            return "Error interno al autenticar.", 500
+
         if not user:
             return "Credenciales inválidas.", 401
 
@@ -146,7 +180,11 @@ def registro():
             rol=rol,
         )
     except ValueError as exc:
-        return str(exc), 500
+        app.logger.error("Error de validacion en /registro: %s", exc, exc_info=True)
+        return str(exc), 400
+    except Exception as exc:
+        app.logger.error("Error interno en /registro para rut=%s: %s", rut, exc, exc_info=True)
+        return "Error interno al registrar usuario.", 500
 
     if not created:
         return "El RUT ya existe en el sistema.", 400
@@ -166,12 +204,27 @@ def subir_examen():
     if not rut_paciente or not titulo_examen or archivo is None:
         return "Faltan datos o archivo para subir el examen.", 400
 
-    created = create_document_for_patient(
-        rut_paciente=rut_paciente,
-        rut_autor=session.get("rut", ""),
-        titulo_examen=titulo_examen,
-        archivo_uuid=archivo.filename,
-    )
+    file_content = archivo.read()
+    if not file_content:
+        return "El archivo está vacío.", 400
+
+    try:
+        created = create_document_for_patient(
+            rut_paciente=rut_paciente,
+            rut_autor=session.get("rut", ""),
+            titulo_examen=titulo_examen,
+            archivo_uuid=archivo.filename,
+            file_content=file_content,
+            content_type=archivo.mimetype,
+        )
+    except Exception as exc:
+        app.logger.error(
+            "Error interno en /subir_examen para rut_paciente=%s: %s",
+            rut_paciente,
+            exc,
+            exc_info=True,
+        )
+        return "Error interno al subir examen.", 500
 
     if created is None:
         return "No se pudo registrar el examen.", 500
