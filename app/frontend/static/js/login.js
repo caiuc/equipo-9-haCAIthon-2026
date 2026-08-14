@@ -1,4 +1,15 @@
-// 1. Elementos del DOM
+// Declaración de elementos para la contraseña
+const passInput = document.getElementById('password-input');
+const toggleBtn = document.getElementById('btn-toggle');
+
+// Lógica del ojo (mostrar / ocultar contraseña)
+if (passInput && toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+        const isPassword = passInput.type === 'password';
+        passInput.type = isPassword ? 'text' : 'password';
+        toggleBtn.textContent = isPassword ? '🙈' : '👁️';
+    });
+}// 1. Declaración de elementos del DOM
 const passInput = document.getElementById('password-input');
 const toggleBtn = document.getElementById('btn-toggle');
 const rutInput = document.getElementById('rut-input');
@@ -13,19 +24,18 @@ if (passInput && toggleBtn) {
     });
 }
 
-// 3. Capturar credenciales al presionar "Ingresar"
+// 3. Captura y guardado de datos
 if (loginBtn) {
     loginBtn.addEventListener('click', () => {
         const rut = rutInput ? rutInput.value.trim() : '';
         const password = passInput ? passInput.value : '';
 
-        // Objeto listo para enviar o validar
         const credentials = {
             rut: rut,
             password: password
         };
 
         console.log('Credenciales ingresadas:', credentials);
-        alert(`Iniciando sesión con RUT: ${rut}`);
+        alert('¡Inicio de sesión capturado correctamente!');
     });
 }

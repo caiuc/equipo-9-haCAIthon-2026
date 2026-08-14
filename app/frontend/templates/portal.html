@@ -1,11 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Portal - Mi Fecha Médica</title>
+    <link rel="stylesheet" href="../static/css/auth.css">
+    <link rel="stylesheet" href="../static/css/portal.css">
 </head>
 <body>
-    
+
+    <!-- Header fijo superior con título centrado y botón salir a la derecha -->
+    <header class="app-header header-portal">
+        <a href="/portal" class="header-title">Mi Fecha Médica</a>
+        <a href="http://127.0.0.1:5000/logout" class="btn-logout">Cerrar Sesión</a>
+    </header>
+
+    <!-- Contenedor principal del portal -->
+    <main class="portal-container">
+        
+        <!-- Tarjeta de información del usuario en sesión -->
+        <section class="user-card">
+            <div class="user-info">
+                <h2>Bienvenido/a, {{ usuario.nombre_completo }}</h2>
+                <p class="user-role">Rol: <span class="badge-role">{{ usuario.rol | capitalize }}</span></p>
+                <p class="user-rut">RUT: {{ usuario.rut }}</p>
+            </div>
+        </section>
+
+        <!-- VISTA PARA ROL MÉDICO -->
+        {% if usuario.rol == 'medico' %}
+        <section class="portal-section">
+            <h3>Buscar Historial de Paciente</h3>
+            <p class="section-desc">Ingresa el RUT del paciente para ver sus exámenes y antecedentes.</p>
+            
+            <form action="http://127.0.0.1:5000/historial" method="GET" class="search-form">
+                <input 
+                    type="text" 
+                    name="rut_paciente" 
+                    class="text-area-style" 
+                    placeholder="RUT Paciente: 12.345.678-k" 
+                    maxlength="12"
+                    required
+                >
+                <button type="submit" class="btn-primary-portal">Consultar Historial</button>
+            </form>
+        </section>
+        {% endif %}
+
+        <!-- VISTA PARA ROL PACIENTE (Lista de documentos con validación) -->
+        {% if usuario.rol == 'paciente' %}
+        <section class="portal-section">
+            <h3>Mis Documentos y Exámenes</h3>
+            
+            {% if documentos and documentos|length > 0 %}
+                <div class="examenes-grid">
+                    {% for documento in documentos %}
+                    <div class="examen-card">
+                        <div class="examen-header">
+                            <span class="examen-icon">📄</span>
+                            <h4>{{ documento.titulo_examen }}</h4>
+                        </div>
+                        
+                        <p class="examen-date">Fecha: {{ documento.fecha or 'Reciente' }}</p>
+
+                        <!-- Estado de validación por médico -->
+                        <div class="status-container">
+                            {% if documento.es_validado %}
+                                <span class="badge-status status-validated">✓ Validado por Médico</span>
+                            {% else %}
+                                <span class="badge-status status-pending">⏳ Pendiente de Revisión</span>
+                            {% endif %}
+                        </div>
+
+                        {% if documento.url_archivo %}
+                            <a href="{{ documento.url_archivo }}" target="_blank" class="btn-download">Ver / Descargar</a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>No tienes documentos ni exámenes registrados en este momento.</p>
+                </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+    </main>
+
 </body>
 </html>

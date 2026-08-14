@@ -3,24 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
-    <!-- Mismo CSS compartido y script de registro -->
+    <title>Registro - Tu Fecha Médica</title>
     <link rel="stylesheet" href="../static/css/auth.css">
     <script src="../static/js/register.js" defer></script>
 </head>
 <body>
 
+    <!-- Header fijo superior -->
+    <header class="app-header">
+        <a href="./index.html" class="header-title">Tu Fecha Médica</a>
+    </header>
+
+    <!-- Tarjeta de formulario tradicional -->
     <main class="auth-container">
         <h2>Registro</h2>
 
-        <section class="text-area-container">
+        <form action="http://127.0.0.1:5000/registro" method="POST" class="text-area-container">
             <!-- RUT -->
             <input 
                 class="text-area-style" 
                 placeholder="Rut: 12.345.678-k" 
                 type="text" 
+                name="rut"
                 id="rut-input" 
                 maxlength="12"
+                required
             >
 
             <!-- Contraseña con botón de ojo -->
@@ -29,7 +36,9 @@
                     class="text-area-style" 
                     placeholder="Contraseña" 
                     type="password" 
+                    name="password"
                     id="password-input"
+                    required
                 >
                 <button type="button" class="btn-toggle-pass" id="btn-toggle">👁️</button>
             </div>
@@ -39,14 +48,25 @@
                 class="text-area-style" 
                 placeholder="Nombre completo" 
                 type="text" 
+                name="nombre_completo"
                 id="name-input"
+                required
             >
 
-            <!-- Botón de Registro -->
-            <button type="button" id="btn-submit" class="btn-register">Registrarse</button>
+            <!-- Selector de Rol -->
+            <select class="text-area-style" name="rol" id="role-select" required>
+                <option value="" disabled selected>Selecciona tu rol</option>
+                <option value="paciente">Paciente</option>
+                <option value="medico">Médico</option>
+            </select>
+
+            <!-- Botón Submit -->
+            <button type="submit" id="btn-submit" class="btn-register">Registrarse</button>
+
+            <!-- Navegación -->
             <p class="auth-redirect">¿Ya tienes cuenta? <a href="./login.html">Inicia sesión</a></p>
-        
-        </section>
+            <a href="./index.html" class="back-link">Volver al inicio</a>
+        </form>
     </main>
 
 </body>
