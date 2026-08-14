@@ -1,0 +1,101 @@
+INSTRUCCIONES FRONTEND PARA CONECTAR CON BACKEND FLASK
+
+Base de la app
+1. URL base local: http://127.0.0.1:5000
+2. Todas las rutas cuelgan de esa base.
+3. La autenticación es por sesión con cookie de Flask, no por token.
+4. Bucket por defecto esperado por backend para archivos: hacaithon-docs.
+5. Si quieren otro nombre de bucket, deben definir SUPABASE_BUCKET en .env con ese valor.
+
+Regla clave de sesión
+1. Después de login exitoso, el navegador debe conservar y enviar la cookie de sesión en las siguientes peticiones.
+2. Si no se envía esa cookie, el backend redirige a login y parecerá que no funciona.
+
+Rutas y contratos exactos
+
+1) Registro de usuario
+1. Ruta: /registro
+2. Método: POST
+3. Tipo de datos: formulario tradicional
+4. Campos obligatorios:
+   - rut
+   - password
+   - nombre_completo
+   - rol
+5. Valores válidos de rol: paciente o medico
+6. Respuestas esperadas:
+   - Éxito: redirección a /login
+   - Error por datos faltantes: 400
+   - Error por rut ya existente: 400
+
+2) Login
+1. Ruta: /login
+2. Método: POST
+3. Tipo de datos: formulario tradicional
+4. Campos obligatorios:
+   - rut
+   - password
+5. Respuestas esperadas:
+   - Éxito: redirección a /portal y creación de sesión
+   - Credenciales inválidas: 401
+
+3) Logout
+1. Ruta: /logout
+2. Método: GET
+3. Efecto: limpia sesión y redirige a /login
+
+4) Portal
+1. Ruta: /portal
+2. Método: GET
+3. Requiere sesión activa.
+4. Si no hay sesión: redirección a /login
+5. Si hay sesión:
+   - rol medico: muestra vista de búsqueda de paciente
+   - rol paciente: muestra vista de Mi historial
+
+5) Historial
+1. Ruta: /historial
+2. Método: GET
+3. Parámetro query obligatorio: rut_paciente
+4. Requiere sesión activa.
+5. Si no hay sesión: redirección a /login
+6. Si falta rut_paciente: 400
+7. Si el usuario en sesión no es medico: 403
+8. Si el paciente no existe: 404
+9. Si todo está bien: 200 con historial del paciente
+
+6) Subir examen
+1. Ruta: /subir_examen
+2. Método: POST
+3. Tipo de datos: multipart/form-data
+4. Campos obligatorios:
+   - rut_paciente
+   - titulo_examen
+   - archivo
+5. Requiere sesión activa.
+6. Si no hay sesión: redirección a /login
+7. Si faltan campos o archivo: 400
+8. Si éxito: redirección a /historial?rut_paciente=...
+
+Formato de nombres que no deben cambiar
+1. No cambiar nombres de campos:
+   - nombre_completo, no full_name
+   - titulo_examen, no title
+   - rut_paciente, no patient_rut
+2. No cambiar nombres de rutas:
+   - /registro, no /register
+   - /subir_examen, no /documents/upload
+3. No cambiar valores de rol esperados por backend:
+   - paciente
+   - medico
+
+Qué esperar en la respuesta
+1. Varias rutas responden con redirección o HTML, no JSON.
+2. Eso es normal en el estado actual del backend.
+3. Si el frontend espera JSON en todas, va a fallar aunque backend esté correcto.
+
+Resumen para evitar errores
+1. Usar exactamente las rutas indicadas.
+2. Usar exactamente los nombres de campos indicados.
+3. Mantener la sesión entre requests (cookie).
+4. No asumir respuestas JSON en todas las rutas.
