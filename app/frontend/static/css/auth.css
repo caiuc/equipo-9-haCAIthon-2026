@@ -1,0 +1,159 @@
+* {
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background-color: #f3f4f6;
+}
+
+.auth-container {
+    background-color: #ffffff;
+    width: 360px;
+    padding: 35px 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.auth-container h2 {
+    margin: 0 0 20px 0;
+    color: #1f2937;
+    font-size: 22px;
+}
+
+.text-area-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.text-area-style {
+    width: 250px;
+    height: 38px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    padding: 0 10px;
+    font-size: 14px;
+    outline: none;
+    background-color: #ffffff;
+}
+
+.text-area-style:focus {
+    border-color: #2563eb;
+}
+
+.password-wrapper {
+    position: relative;
+    width: 250px;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper .text-area-style {
+    width: 100%;
+    padding-right: 35px;
+}
+
+.btn-toggle-pass {
+    position: absolute;
+    right: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-register {
+    width: auto;
+    min-width: 140px;
+    height: 38px;
+    padding: 0 20px;
+    margin-top: 10px;
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-register:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.btn-register:active {
+    background-color: #e5e7eb;
+}
+
+/* Estilos para index.html */
+.index-description {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin: 0 0 25px 0;
+}
+
+.index-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+}
+
+/* Enlaces con apariencia de botón */
+.btn-link {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 220px;
+    height: 38px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+/* Botón principal (Iniciar Sesión) */
+.btn-primary {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: 1px solid #2563eb;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* Botón secundario (Crear Cuenta / Blanco como los anteriores) */
+.btn-secondary {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}

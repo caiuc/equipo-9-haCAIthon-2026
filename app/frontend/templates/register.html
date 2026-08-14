@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <!-- Mismo CSS compartido y script de registro -->
+    <link rel="stylesheet" href="../static/css/auth.css">
+    <script src="../static/js/register.js" defer></script>
+</head>
+<body>
+
+    <main class="auth-container">
+        <h2>Registro</h2>
+
+        <section class="text-area-container">
+            <!-- RUT -->
+            <input 
+                class="text-area-style" 
+                placeholder="Rut: 12.345.678-k" 
+                type="text" 
+                id="rut-input" 
+                maxlength="12"
+            >
+
+            <!-- Contraseña con botón de ojo -->
+            <div class="password-wrapper">
+                <input 
+                    class="text-area-style" 
+                    placeholder="Contraseña" 
+                    type="password" 
+                    id="password-input"
+                >
+                <button type="button" class="btn-toggle-pass" id="btn-toggle">👁️</button>
+            </div>
+
+            <!-- Nombre Completo -->
+            <input 
+                class="text-area-style" 
+                placeholder="Nombre completo" 
+                type="text" 
+                id="name-input"
+            >
+
+            <!-- Botón de Registro -->
+            <button type="button" id="btn-submit" class="btn-register">Registrarse</button>
+            <p class="auth-redirect">¿Ya tienes cuenta? <a href="./login.html">Inicia sesión</a></p>
+        
+        </section>
+    </main>
+
+</body>
+</html>
