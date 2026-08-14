@@ -1,11 +1,14 @@
 import os
 
 import psycopg2
+from cryptography.fernet import Fernet
 from werkzeug.security import check_password_hash, generate_password_hash
 
 MEMORY_DB = {
     "users": [],
     "profiles": [],
+    "documents": [],
+    "access_logs": [],
 }
 
 
@@ -28,6 +31,29 @@ def _next_user_id():
 
 def _next_profile_id():
     return max((profile["id"] for profile in MEMORY_DB["profiles"]), default=0) + 1
+
+
+def _next_document_id():
+    return max((document["id"] for document in MEMORY_DB["documents"]), default=0) + 1
+
+
+def _next_access_log_id():
+    return max((log["id"] for log in MEMORY_DB["access_logs"]), default=0) + 1
+
+
+def _get_fernet():
+    key = os.getenv("FERNET_KEY")
+    if not key:
+        raise ValueError("FERNET_KEY no configurada")
+    return Fernet(key.encode())
+
+
+def encrypt_title(title: str) -> str:
+    return _get_fernet().encrypt(title.encode("utf-8")).decode("utf-8")
+
+
+def decrypt_title(cipher_text: str) -> str:
+    return _get_fernet().decrypt(cipher_text.encode("utf-8")).decode("utf-8")
 
 
 def get_user_by_rut(rut: str):
@@ -119,3 +145,116 @@ def authenticate_user(rut: str, password: str):
         return None
 
     return user
+
+
+def create_document_for_patient(rut_paciente: str, rut_autor: str, titulo_examen: str, archivo_uuid: str):
+    paciente = get_user_by_rut(rut_paciente)
+    if paciente is None:
+        return None
+
+    autor = get_user_by_rut(rut_autor)
+    if autor is None:
+        return None
+
+    encrypted_title = encrypt_title(titulo_examen)
+
+    connection = get_db_connection()
+    if connection is None:
+        document = {
+            "id": _next_document_id(),
+            "patient_id": paciente["id"],
+            "author_id": autor["id"],
+            "file_title": encrypted_title,
+            "file_uuid": archivo_uuid,
+            "is_validated": autor["rol"] == "medico",
+        }
+        MEMORY_DB["documents"].append(document)
+        return document
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO docs (patient_id, author_id, file_title, file_uuid, is_validated) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                (paciente["id"], autor["id"], encrypted_title, archivo_uuid, autor["rol"] == "medico"),
+            )
+            document_id = cursor.fetchone()[0]
+        connection.commit()
+        return {"id": document_id}
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def get_patient_documents_by_rut(rut_paciente: str):
+    paciente = get_user_by_rut(rut_paciente)
+    if paciente is None:
+        return []
+
+    connection = get_db_connection()
+    if connection is None:
+        documents = []
+        for document in MEMORY_DB["documents"]:
+            if document["patient_id"] == paciente["id"]:
+                documents.append(
+                    {
+                        "id": document["id"],
+                        "file_uuid": document["file_uuid"],
+                        "titulo": decrypt_title(document["file_title"]),
+                        "es_validado": document["is_validated"],
+                    }
+                )
+        return documents
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, file_uuid, file_title, is_validated FROM docs WHERE patient_id = %s ORDER BY submit_date DESC",
+                (paciente["id"],),
+            )
+            rows = cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "file_uuid": row[1],
+                    "titulo": decrypt_title(row[2]),
+                    "es_validado": row[3],
+                }
+                for row in rows
+            ]
+    finally:
+        connection.close()
+
+
+def register_access_log(rut_paciente: str, rut_medico: str):
+    paciente = get_user_by_rut(rut_paciente)
+    medico = get_user_by_rut(rut_medico)
+    if paciente is None or medico is None:
+        return None
+
+    connection = get_db_connection()
+    if connection is None:
+        log = {
+            "id": _next_access_log_id(),
+            "doc_id": None,
+            "patient_id": paciente["id"],
+            "access_date": "now",
+        }
+        MEMORY_DB["access_logs"].append(log)
+        return log
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO auditoria_accesos (patient_id) VALUES (%s) RETURNING id",
+                (paciente["id"],),
+            )
+            log_id = cursor.fetchone()[0]
+        connection.commit()
+        return {"id": log_id}
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
