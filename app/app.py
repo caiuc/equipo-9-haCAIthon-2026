@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, render_template_string, redirect, request, session, url_for
+from flask import Flask, render_template_string, redirect, request, session, url_for, render_template
 
 if __package__ in (None, ""):
     project_root = Path(__file__).resolve().parent.parent
@@ -29,7 +29,7 @@ else:
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='frontend/templates')
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
 
 
@@ -42,95 +42,19 @@ def inicio():
 
 @app.route("/portal")
 def portal():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    rol = session.get("rol", "paciente")
-    if rol == "medico":
-        template = """
-        <html>
-            <body>
-                <h1>Portal médico</h1>
-                <p>Buscar paciente</p>
-                <form action="/historial" method="get">
-                    <input type="text" name="rut_paciente" placeholder="RUT del paciente">
-                    <button type="submit">Buscar</button>
-                </form>
-            </body>
-        </html>
-        """
-    else:
-        template = """
-        <html>
-            <body>
-                <h1>Mi historial</h1>
-                <p>Documentos del paciente</p>
-                <ul>
-                    <li>Examen de laboratorio</li>
-                    <li>Control cardiológico</li>
-                </ul>
-            </body>
-        </html>
-        """
-
-    return render_template_string(template)
+    if "user_id" not in session: return redirect(url_for("login"))
+    # Simulamos el objeto usuario para el HTML
+    usuario = {"nombre_completo": "Usuario", "rol": session.get("rol"), "rut": session.get("rut")}
+    documentos = get_patient_documents_by_rut(session.get("rut")) if session.get("rol") == "paciente" else []
+    return render_template("portal.html", usuario=usuario, documentos=documentos)
 
 
-@app.route("/historial")
+@app.route("/historial", methods=["GET"])
 def historial():
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    rut_paciente = request.args.get("rut_paciente", "").strip()
-    if not rut_paciente:
-        return "Debes indicar un RUT de paciente.", 400
-
-    if session.get("rol") != "medico":
-        return "Solo un médico puede consultar historiales ajenos.", 403
-
-    try:
-        paciente = get_user_by_rut(rut_paciente)
-    except Exception as exc:
-        app.logger.error("Error consultando paciente en /historial: %s", exc, exc_info=True)
-        return "Error interno al consultar historial.", 500
-
-    if paciente is None:
-        return "Paciente no encontrado.", 404
-
-    try:
-        documentos = get_patient_documents_by_rut(rut_paciente)
-        register_access_log(rut_paciente, session.get("rut"))
-    except Exception as exc:
-        app.logger.error("Error obteniendo documentos en /historial: %s", exc, exc_info=True)
-        return "Error interno al consultar historial.", 500
-
-    html = """
-    <html>
-        <body>
-            <h1>Historial de paciente</h1>
-            <p>Paciente: {{ paciente_rut }}</p>
-            <ul>
-                {% for documento in documentos %}
-                    <li>
-                        {{ documento.titulo }}
-                        {% if documento.es_validado %}
-                            - Validado
-                        {% else %}
-                            - Pendiente
-                        {% endif %}
-                        | Bucket: {{ documento.bucket_name }}
-                        | Path: {{ documento.storage_path }}
-                        {% if documento.public_url %}
-                            | URL: {{ documento.public_url }}
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        </body>
-    </html>
-    """
-
-    return render_template_string(html, paciente_rut=rut_paciente, documentos=documentos)
+    if "user_id" not in session or session.get("rol") != "medico": return redirect(url_for("login"))
+    rut_paciente = request.args.get("rut_paciente")
+    documentos = get_patient_documents_by_rut(rut_paciente)
+    return render_template("portal.html", usuario={"rol": "medico", "rut": rut_paciente}, documentos=documentos)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -153,7 +77,7 @@ def login():
         session["rut"] = user["rut"]
         return redirect(url_for("portal"))
 
-    return "Pantalla de login"
+    return render_template("login.html")
 
 
 @app.route("/logout")
@@ -162,34 +86,21 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/registro", methods=["POST"])
+# Reemplaza la ruta /registro completa
+@app.route("/registro", methods=["GET", "POST"])
 def registro():
-    rut = request.form.get("rut", "").strip()
-    password = request.form.get("password", "")
-    nombre_completo = request.form.get("nombre_completo", "").strip()
-    rol = request.form.get("rol", "paciente").strip()
-
-    if not rut or not password or not nombre_completo:
-        return "Faltan datos obligatorios para el registro.", 400
-
-    try:
-        created = create_user_with_profile(
-            rut=rut,
-            password=password,
-            nombre_completo=nombre_completo,
-            rol=rol,
-        )
-    except ValueError as exc:
-        app.logger.error("Error de validacion en /registro: %s", exc, exc_info=True)
-        return str(exc), 400
-    except Exception as exc:
-        app.logger.error("Error interno en /registro para rut=%s: %s", rut, exc, exc_info=True)
-        return "Error interno al registrar usuario.", 500
-
-    if not created:
-        return "El RUT ya existe en el sistema.", 400
-
-    return redirect(url_for("login"))
+    if request.method == "POST":
+        rut = request.form.get("rut", "").strip()
+        password = request.form.get("password", "")
+        nombre_completo = request.form.get("nombre_completo", "").strip()
+        rol = request.form.get("rol", "paciente").strip()
+        
+        try:
+            if create_user_with_profile(rut, password, nombre_completo, rol):
+                return redirect(url_for("login"))
+        except:
+            return "Error en registro", 400
+    return render_template("register.html")
 
 
 @app.route("/subir_examen", methods=["POST"])
