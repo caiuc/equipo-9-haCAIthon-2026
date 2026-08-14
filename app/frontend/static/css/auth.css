@@ -47,19 +47,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: auto 0; /* Mantiene la tarjeta en el centro de la pantalla */
+    margin: auto 0; /* Imprescindible para centrar verticalmente */
 }
 
-.auth-container {
-    background-color: #ffffff;
-    width: 360px;
-    padding: 35px 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
 
 .auth-container h2 {
     margin: 0 0 20px 0;
@@ -194,4 +184,9 @@ body {
 .btn-secondary:hover {
     background-color: #f3f4f6;
     border-color: #9ca3af;
+}
+
+select.text-area-style {
+    background-color: #ffffff;
+    cursor: pointer;
 }

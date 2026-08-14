@@ -10,7 +10,7 @@
 </head>
 <body>
     <header class="app-header">
-        <a href="./index.html" class="header-title">Tu Fecha Médica</a>
+        <a href="./index.html" class="header-title">Mi Fecha Médica</a>
     </header>
 
     <main class="auth-container">
@@ -44,6 +44,13 @@
                 type="text" 
                 id="name-input"
             >
+
+            <!-- Selector de Rol (Paciente / Médico) -->
+            <select class="text-area-style" id="role-select">
+                <option value="" disabled selected>Selecciona tu rol</option>
+                <option value="paciente">Paciente</option>
+                <option value="medico">Médico</option>
+            </select>
 
             <!-- Botón de Registro -->
             <button type="button" id="btn-submit" class="btn-register">Registrarse</button>
