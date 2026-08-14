@@ -169,7 +169,11 @@ def subir_examen():
     if created is None:
         return "No se pudo registrar el examen en la base de datos o storage.", 500
 
-    return redirect(url_for("historial", rut_paciente=rut_paciente))
+# Si es paciente, lo devolvemos a su portal. Si es médico, al historial.
+    if session.get("rol") == "paciente":
+        return redirect(url_for("portal"))
+    else:
+        return redirect(url_for("historial", rut_paciente=rut_paciente))
 
 
 
