@@ -6,6 +6,8 @@ import psycopg2
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 from werkzeug.security import check_password_hash, generate_password_hash
+from supabase import create_client, Client
+
 
 MEMORY_DB = {
     "users": [],
@@ -407,3 +409,25 @@ def register_access_log(rut_paciente: str, rut_medico: str):
         raise
     finally:
         connection.close()
+
+
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") # Usamos la llave maestra
+supabase: Client = create_client(url, key)
+
+def generar_url_lectura(ruta_archivo):
+    """
+    Genera una URL firmada válida por 3600 segundos (1 hora)
+    para que el frontend pueda visualizar el archivo privado.
+    """
+    try:
+        # Pide a Supabase una URL temporal para el archivo en 'hacaithon-docs'
+        respuesta = supabase.storage.from_('hacaithon-docs').create_signed_url(ruta_archivo, 3600)
+        
+        # Dependiendo de la versión del SDK, devuelve un diccionario o un string
+        if isinstance(respuesta, dict) and 'signedURL' in respuesta:
+            return respuesta['signedURL']
+        return respuesta # Si el SDK devuelve el string directamente
+    except Exception as e:
+        print(f"Error generando URL firmada: {e}")
+        return None

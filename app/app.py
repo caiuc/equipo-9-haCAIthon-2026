@@ -231,6 +231,23 @@ def subir_examen():
 
     return redirect(url_for("historial", rut_paciente=rut_paciente))
 
+# app.py
+from flask import redirect, jsonify
+from backend.queries import generar_url_lectura
+
+@app.route('/ver_documento/<path:nombre_archivo>', methods=['GET'])
+def ver_documento(nombre_archivo):
+    # NOTA: En un sistema real, aquí verificarías si el usuario tiene sesión iniciada
+    # usando la variable 'session' de Flask antes de generar la URL.
+    
+    url_temporal = generar_url_lectura(nombre_archivo)
+    
+    if url_temporal:
+        # Redirige el navegador automáticamente al PDF autorizado
+        return redirect(url_temporal)
+    else:
+        return jsonify({"error": "Archivo no encontrado o error de permisos"}), 404
+
 
 if __name__ == "__main__":
     app.run(debug=True)
