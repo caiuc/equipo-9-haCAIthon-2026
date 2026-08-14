@@ -59,8 +59,9 @@
 
       <!-- VISTA PARA ROL PACIENTE (Lista de documentos con validación) -->
       {% if usuario.rol == 'paciente' %}
+      <!-- VISTA PARA MOSTRAR EXÁMENES (Sirve tanto para paciente como para médico viendo un historial) -->
       <section class="portal-section">
-        <h3>Mis Documentos y Exámenes</h3>
+        <h3>Documentos del Paciente: {{ usuario.rut }}</h3>
 
         {% if documentos and documentos|length > 0 %}
         <div class="examenes-grid">
@@ -75,22 +76,17 @@
               Fecha: {{ documento.fecha or 'Reciente' }}
             </p>
 
-            <!-- Estado de validación por médico -->
             <div class="status-container">
               {% if documento.es_validado %}
-              <span class="badge-status status-validated"
-                >✓ Validado por Médico</span
-              >
+              <span class="badge-status status-validated">✓ Validado</span>
               {% else %}
-              <span class="badge-status status-pending"
-                >⏳ Pendiente de Revisión</span
-              >
+              <span class="badge-status status-pending">⏳ Pendiente</span>
               {% endif %}
             </div>
 
-            {% if documento.url_archivo %}
+            {% if documento.storage_path %}
             <a
-              href="{{ documento.url_archivo }}"
+              href="/ver_documento/{{ documento.storage_path }}"
               target="_blank"
               class="btn-download"
               >Ver / Descargar</a
@@ -101,7 +97,7 @@
         </div>
         {% else %}
         <div class="empty-state">
-          <p>No tienes documentos ni exámenes registrados en este momento.</p>
+          <p>Este paciente no tiene exámenes registrados.</p>
         </div>
         {% endif %}
       </section>

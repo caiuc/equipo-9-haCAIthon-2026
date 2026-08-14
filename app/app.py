@@ -56,7 +56,7 @@ def historial():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    # Captura el RUT que viaja por la URL (ej: /historial?rut_paciente=123...)
+    # Captura el RUT y límpiale los espacios o puntos comunes
     rut_paciente = request.args.get("rut_paciente", "").strip()
     
     if not rut_paciente:
@@ -66,25 +66,31 @@ def historial():
         return "Solo un médico puede consultar historiales ajenos.", 403
 
     try:
+        # CAMBIO CLAVE: Búscalo tal cual, o intenta limpiar posibles espacios extra
         paciente = get_user_by_rut(rut_paciente)
+        
+        # Si tu base de datos guarda sin puntos ni guion, puedes probar normalizarlo aquí si falla:
+        # if not paciente:
+        #     rut_limpio = rut_paciente.replace(".", "").replace("-", "").strip()
+        #     paciente = get_user_by_rut(rut_limpio)
+            
     except Exception as exc:
         app.logger.error("Error consultando paciente en /historial: %s", exc, exc_info=True)
         return "Error interno al consultar historial.", 500
 
     if paciente is None:
-        return "Paciente no encontrado.", 404
+        return f"Paciente no encontrado con el RUT: {rut_paciente}", 404
 
     try:
-        documentos = get_patient_documents_by_rut(rut_paciente)
-        register_access_log(rut_paciente, session.get("rut"))
+        # Usa el RUT real devuelto por la base de datos para buscar los documentos con seguridad
+        rut_bd = paciente.get("rut", rut_paciente)
+        documentos = get_patient_documents_by_rut(rut_bd)
+        register_access_log(rut_bd, session.get("rut"))
     except Exception as exc:
         app.logger.error("Error obteniendo documentos en /historial: %s", exc, exc_info=True)
         return "Error interno al consultar historial.", 500
 
-    # Renderiza la vista pasando los datos del paciente y sus documentos
-    return render_template("portal.html", usuario={"rol": "medico", "rut": rut_paciente, "nombre_completo": paciente.get("nombre_completo", "Paciente")}, documentos=documentos)
-
-
+    return render_template("portal.html", usuario={"rol": "medico", "rut": rut_bd, "nombre_completo": paciente.get("nombre_completo", "Paciente")}, documentos=documentos)
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
