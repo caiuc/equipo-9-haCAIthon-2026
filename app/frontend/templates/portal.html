@@ -9,7 +9,7 @@
 </head>
 <body>
 
-    <!-- Header fijo superior con botón de cerrar sesión -->
+    <!-- Header fijo superior con título centrado y botón salir a la derecha -->
     <header class="app-header header-portal">
         <a href="/portal" class="header-title">Mi Fecha Médica</a>
         <a href="http://127.0.0.1:5000/logout" class="btn-logout">Cerrar Sesión</a>
@@ -47,29 +47,40 @@
         </section>
         {% endif %}
 
-        <!-- VISTA PARA ROL PACIENTE -->
+        <!-- VISTA PARA ROL PACIENTE (Lista de documentos con validación) -->
         {% if usuario.rol == 'paciente' %}
         <section class="portal-section">
-            <h3>Mis Exámenes Médicos</h3>
+            <h3>Mis Documentos y Exámenes</h3>
             
-            {% if examenes and examenes|length > 0 %}
+            {% if documentos and documentos|length > 0 %}
                 <div class="examenes-grid">
-                    {% for examen in examenes %}
+                    {% for documento in documentos %}
                     <div class="examen-card">
                         <div class="examen-header">
                             <span class="examen-icon">📄</span>
-                            <h4>{{ examen.titulo_examen }}</h4>
+                            <h4>{{ documento.titulo_examen }}</h4>
                         </div>
-                        <p class="examen-date">Fecha: {{ examen.fecha or 'Reciente' }}</p>
-                        {% if examen.url_archivo %}
-                            <a href="{{ examen.url_archivo }}" target="_blank" class="btn-download">Ver / Descargar</a>
+                        
+                        <p class="examen-date">Fecha: {{ documento.fecha or 'Reciente' }}</p>
+
+                        <!-- Estado de validación por médico -->
+                        <div class="status-container">
+                            {% if documento.es_validado %}
+                                <span class="badge-status status-validated">✓ Validado por Médico</span>
+                            {% else %}
+                                <span class="badge-status status-pending">⏳ Pendiente de Revisión</span>
+                            {% endif %}
+                        </div>
+
+                        {% if documento.url_archivo %}
+                            <a href="{{ documento.url_archivo }}" target="_blank" class="btn-download">Ver / Descargar</a>
                         {% endif %}
                     </div>
                     {% endfor %}
                 </div>
             {% else %}
                 <div class="empty-state">
-                    <p>No tienes exámenes registrados en este momento.</p>
+                    <p>No tienes documentos ni exámenes registrados en este momento.</p>
                 </div>
             {% endif %}
         </section>

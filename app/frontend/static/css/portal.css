@@ -7,7 +7,7 @@
     height: 60px;
     background-color: #ffffff;
     display: flex;
-    justify-content: center; /* Centra el título en toda la pantalla */
+    justify-content: center;
     align-items: center;
     padding: 0 30px;
     box-sizing: border-box;
@@ -15,7 +15,6 @@
     z-index: 1000;
 }
 
-/* El título se mantiene como enlace centrado */
 .header-portal .header-title {
     text-decoration: none;
     color: #1f2937;
@@ -23,7 +22,6 @@
     font-size: 20px;
 }
 
-/* El botón de cerrar sesión se fija a la derecha */
 .btn-logout {
     position: absolute;
     right: 30px;
@@ -40,4 +38,173 @@
 
 .btn-logout:hover {
     background-color: #fee2e2;
+}
+
+/* Contenedor principal */
+.portal-container {
+    width: 90%;
+    max-width: 800px;
+    margin-top: 90px;
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Tarjeta del usuario */
+.user-card {
+    background-color: #ffffff;
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+.user-card h2 {
+    margin: 0 0 10px 0;
+    color: #1f2937;
+    font-size: 20px;
+}
+
+.user-role, .user-rut {
+    margin: 4px 0;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.badge-role {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* Secciones internas */
+.portal-section {
+    background-color: #ffffff;
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+.portal-section h3 {
+    margin: 0 0 8px 0;
+    color: #1f2937;
+    font-size: 18px;
+}
+
+.section-desc {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 18px 0;
+}
+
+/* Formulario de búsqueda (médico) */
+.search-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-primary-portal {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: 1px solid #2563eb;
+    padding: 0 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary-portal:hover {
+    background-color: #1d4ed8;
+}
+
+/* Grilla de documentos (paciente) */
+.examenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.examen-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.examen-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.examen-header h4 {
+    margin: 0;
+    font-size: 15px;
+    color: #1f2937;
+}
+
+.examen-date {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Insignias de Validación */
+.status-container {
+    margin: 4px 0 6px 0;
+}
+
+.badge-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.status-validated {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.btn-download {
+    text-align: center;
+    font-size: 13px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+    border: 1px solid #bfdbfe;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background-color: #eff6ff;
+    transition: all 0.2s ease;
+}
+
+.btn-download:hover {
+    background-color: #dbeafe;
+}
+
+.empty-state {
+    padding: 30px;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 14px;
 }
