@@ -1,0 +1,30 @@
+{
+  "name": "Mi Ficha Médica · HaCAithon 2026",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "forwardPorts": [
+    5000
+  ],
+  "portsAttributes": {
+    "5000": {
+      "label": "Aplicación",
+      "onAutoForward": "openPreview"
+    }
+  },
+  "postAttachCommand": {
+    "app": "python3 -m flask --app app.app run --host 0.0.0.0 --port 5000"
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "README.md"
+      ]
+    }
+  },
+  "postCreateCommand": "bash -lc 'sudo service postgresql start; sudo -u postgres psql -c \"ALTER USER postgres PASSWORD '\\''postgres'\\'';\"; sudo -u postgres createdb ficha || true; sudo -u postgres psql -d ficha -f db/schema.sql || true; pip install -r requirements.txt'",
+  "features": {
+    "ghcr.io/itsmechlark/features/postgresql:1": {
+      "version": "16"
+    }
+  },
+  "//": "La subida de exámenes usa Supabase Storage y necesita sus claves en .env"
+}
